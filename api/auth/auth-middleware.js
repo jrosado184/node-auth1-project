@@ -8,7 +8,7 @@ const Users = require("../users/users-model");
   }
 */
 function restricted(req, res, next) {
-  if (req.session.id) {
+  if (req.session.user) {
     next();
   } else {
     res.status(401).json({ message: "you shall not pass!" });

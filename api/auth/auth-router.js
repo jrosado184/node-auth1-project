@@ -66,7 +66,7 @@ router.post(
   }
  */
 
-router.post("/login", restricted, async (req, res, next) => {
+router.post("/login", checkUsernameExists, async (req, res, next) => {
   try {
     const { username, password } = req.body;
     const [user] = await Users.findBy({ username });
@@ -97,7 +97,17 @@ router.post("/login", restricted, async (req, res, next) => {
   }
  */
 router.get("/logout", (req, res, next) => {
-  res.json("helllllllo");
+  if (req.session.user) {
+    req.session.destroy((err) => {
+      if (err) {
+        next(err);
+      } else {
+        res.json({ message: "logged out" });
+      }
+    });
+  } else {
+    res.json({ message: "no session" });
+  }
 });
 
 // Don't forget to add the router to the `exports` object so it can be required in other modules
