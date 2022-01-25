@@ -10,8 +10,8 @@ function find() {
 /**
   resolves to an ARRAY with all users that match the filter condition
  */
-function findBy(filter) {
-  return db("users").where(filter).first();
+async function findBy(filter) {
+  return db("users").where(filter);
 }
 
 /**
@@ -24,8 +24,9 @@ function findById(user_id) {
 /**
   resolves to the newly inserted user { user_id, username }
  */
-function add(user) {
-  return db("users").insert(user);
+async function add(user) {
+  const [user_id] = await db("users").insert(user);
+  return findById(user_id);
 }
 
 module.exports = {

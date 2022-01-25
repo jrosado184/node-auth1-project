@@ -2,6 +2,14 @@
 // middleware functions from `auth-middleware.js`. You will need them here!
 const express = require("express");
 const router = express.Router();
+const Users = require("./../users/users-model");
+const bcrypt = require("bcryptjs");
+const {
+  restricted,
+  checkUsernameFree,
+  checkUsernameExists,
+  checkPasswordLength,
+} = require("./auth-middleware");
 
 /**
   1 [POST] /api/auth/register { "username": "sue", "password": "1234" }
@@ -25,9 +33,22 @@ const router = express.Router();
     "message": "Password must be longer than 3 chars"
   }
  */
-router.post("/register", (req, res, next) => {
-  res.json("helllllllo");
-});
+router.post(
+  "/register",
+  checkUsernameFree,
+  checkPasswordLength,
+  async (req, res, next) => {
+    try {
+      const { username, password } = req.body;
+      const hash = bcrypt.hashSync(password, 8);
+      const newUser = { username, password: hash };
+      const create = await Users.add(newUser);
+      res.json(create);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 /**
   2 [POST] /api/auth/login { "username": "sue", "password": "1234" }
@@ -44,8 +65,20 @@ router.post("/register", (req, res, next) => {
     "message": "Invalid credentials"
   }
  */
-router.post("/login", (req, res, next) => {
-  res.json("helllllllo");
+
+router.post("/login", restricted, async (req, res, next) => {
+  try {
+    const { username, password } = req.body;
+    const [user] = await Users.findBy({ username });
+    if (user && bcrypt.compareSync(password, user.password)) {
+      req.session.user = user;
+      res.json({ message: `Welcome ${username}!` });
+    } else {
+      next({ status: 401, message: "Invalid credentials" });
+    }
+  } catch (err) {
+    next(err);
+  }
 });
 
 /**

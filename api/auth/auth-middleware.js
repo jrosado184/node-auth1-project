@@ -8,10 +8,10 @@ const Users = require("../users/users-model");
   }
 */
 function restricted(req, res, next) {
-  if (req.session.user) {
-    res.status(401).json({ message: "You shall not pass!" });
-  } else {
+  if (req.session.id) {
     next();
+  } else {
+    res.status(401).json({ message: "you shall not pass!" });
   }
 }
 
@@ -25,8 +25,9 @@ function restricted(req, res, next) {
 */
 async function checkUsernameFree(req, res, next) {
   const { username } = req.body;
-  const users = await Users.findBy({ username });
-  if (users) {
+  const users = await Users.find();
+  const userFind = users.some((user) => user.username === username);
+  if (userFind) {
     next({ status: 422, message: "Username taken" });
   } else {
     next();
@@ -59,7 +60,7 @@ async function checkUsernameExists(req, res, next) {
     "message": "Password must be longer than 3 chars"
   }
 */
-async function checkPasswordLength(req, res, next) {
+function checkPasswordLength(req, res, next) {
   const { password } = req.body;
   if (!password || password.length < 3) {
     next({ status: 422, message: "Password must be longer than 3 chars" });
